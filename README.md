@@ -15,4 +15,9 @@ awxbackup-2024-09-22-0538   25m
 awxbackup-2024-09-22-0558   4m48s
 [root@k3s01 ~]# grep bitbull kube.awxbackup/*yml
 kube.awxbackup/awx-backup-cron.yml:                deployment_name: bitbull
+# change this to your instance name before setting up
+
+# install daily backup
+for i in awx-backup-role.yml awx-backup-rolebinding.yml awx-backup-pvc.yml awx-backup-cron.yml awx-backup-cleanup-cron.yaml
+
 ```
