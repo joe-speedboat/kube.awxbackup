@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: awxbackup
+  namespace: awx  # Ensure this matches the namespace of your AWX deployment
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi  # Adjust the size based on your storage requirements
+#        storageClassName: <your-storage-class>  # Specify your storage class if needed
+

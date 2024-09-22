@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: awx-backup-cron
+  namespace: awx  # Ensure this matches your AWX namespace
+spec:
+  schedule: "0 2 * * *"  # This will run every day at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: awx-backup
+            image: bitnami/kubectl:latest # Using kubectl to apply the manifest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              manifest="
+              ---
+              apiVersion: awx.ansible.com/v1beta1
+              kind: AWXBackup
+              metadata:
+                name: awxbackup-$(date +%Y-%m-%d-%H%M)
+                namespace: awx
+              spec:
+                deployment_name: bitbull
+                clean_backup_on_delete: True
+                backup_pvc: awxbackup
+              "
+              echo "$manifest" | kubectl apply -f -
+          restartPolicy: OnFailure
+      backoffLimit: 3
+

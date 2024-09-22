@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: awx-backup-cleanup-cron
+  namespace: awx
+spec:
+  schedule: "12 12 * * *"  # This will run every day at 12:12 PM (adjust as needed)
+  successfulJobsHistoryLimit: 3  # Retain 3 successful jobs
+  failedJobsHistoryLimit: 5      # Retain 5 failed jobs
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: awx-backup-cleanup
+            image: bitnami/kubectl:latest  # Using kubectl to delete old backups
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Set the number of backups to keep
+              BACKUPS_TO_KEEP=3
+
+              # Get the list of AWX backups, sorted by creation timestamp
+              backups=$(kubectl get awxbackups.awx.ansible.com -n awx --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[*].metadata.name}')
+
+              # Count the number of backups
+              num_backups=$(echo "$backups" | wc -w)
+
+              # Calculate how many backups to delete
+              delete_count=$((num_backups - BACKUPS_TO_KEEP))
+
+              # If there are backups to delete
+              if [ "$delete_count" -gt 0 ]; then
+                echo "Found $num_backups backups. Deleting $delete_count oldest backups."
+
+                # Get the list of backups to delete
+                for backup in $(echo "$backups" | cut -d' ' -f1-$delete_count); do
+                  echo "Deleting backup: $backup"
+                  kubectl delete awxbackups.awx.ansible.com "$backup" -n awx
+                done
+              else
+                echo "No backups need to be deleted. Only $num_backups backups found."
+              fi
+          restartPolicy: OnFailure
+      backoffLimit: 3
+
