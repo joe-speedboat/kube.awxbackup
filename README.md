@@ -19,5 +19,9 @@ kube.awxbackup/awx-backup-cron.yml:                deployment_name: bitbull
 
 # install daily backup
 for i in awx-backup-role.yml awx-backup-rolebinding.yml awx-backup-pvc.yml awx-backup-cron.yml awx-backup-cleanup-cron.yaml
+do
+  echo $i
+  kubectl apply -f $i
+done
 
 ```
